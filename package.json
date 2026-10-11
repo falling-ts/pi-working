@@ -1,6 +1,6 @@
 {
   "name": "@falling-ts/pi-working",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "把 pi 运行时的状态指示器翻译为中文(可切英文), 并细分出请求中/响应中/执行中三个阶段。",
   "type": "module",
   "license": "MIT",
