@@ -11,7 +11,6 @@
 | 已发出模型请求，尚未收到首个 token | **请求中…** | Requesting… |
 | 已收到首个 token，正在流式生成 | **响应中…** | Responding… |
 | 正在执行工具 / 命令等非模型工作 | **执行中…** | Executing… |
-| 正在压缩上下文 | 压缩上下文中… | Compacting context… |
 
 迁移顺序：
 
@@ -80,20 +79,24 @@ PI_WORKING_LANG=en pi             # 英文
 | 命令 | 作用 |
 | --- | --- |
 | `/working` | 显示当前语言与阶段 |
-| `/working request` | 预览"请求中"（其余可选：`working` `respond` `execute` `compact`） |
+| `/working request` | 预览"请求中"（其余可选：`working` `respond` `execute` `clear`） |
 | `/working clear` | 清除指示器 |
 
 ## 已知限制（上游硬编码）
 
-pi 的部分状态文案**硬编码**在 TUI 组件里，扩展没有对应 API 可改。本扩展能改的是
-「Working 一栏」（`ctx.ui.setWorkingMessage()`）与 footer status，影响范围如下：
+pi 的部分状态文案**硬编码**在 TUI 组件里，扩展没有对应 API 可改。本扩展**只**改「工作指示器」
+那一行（`ctx.ui.setWorkingMessage()`），影响范围如下：
 
 | pi 的状态 | 能否改造 | 说明 |
 | --- | --- | --- |
 | `Working` | ✅ 可改 | 本扩展的主战场 |
-| `Compacting context…` / `Auto-compacting…` / `Context overflow detected…` | ⚠️ 部分 | pi 自己的压缩指示器改不了；本扩展通过 `session_before_compact` 事件把 Working 栏与 footer 设为中文，但 pi 那行仍是英文 |
+| `Compacting context…` / `Auto-compacting…` / `Context overflow detected…` | ❌ 不可改 | `CompactionStatusIndicator` 硬编码；且其 `kind` 不是 `working`，`setWorkingMessage` 也影响不到它 |
 | `Retrying (1/3) in 5s…` | ❌ 不可改 | `RetryStatusIndicator` 硬编码，且**扩展层没有暴露重试事件**，无法监听 |
 | `Summarizing branch…` | ❌ 不可改 | `BranchSummaryStatusIndicator` 硬编码，同样无事件 |
+
+**为什么不用 footer 兜底**：pi 内核自身**从不**往 footer 写文字（`setExtensionStatus` 在内核中只有扩展通道一处调用），
+该通道专供扩展。用它补中文只会在屏幕最下方**多出一行**与工作指示器重复的内容，
+而且**替换不掉** pi 自己的英文行 —— 净负面，因此本扩展刻意不介入压缩、重试、分支摘要。
 
 此外：
 
