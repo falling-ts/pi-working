@@ -14,8 +14,8 @@
  *
  * 已知上游限制(见 README): pi 的「压缩/重试/分支摘要」指示器文案硬编码在
  * CompactionStatusIndicator / RetryStatusIndicator / BranchSummaryStatusIndicator 中,
- * 没有公开 API 可改; 本扩展用 footer status 给出中文补充, 但无法替换 pi 自己那一行。
- * 其中「重试」「分支摘要」连事件都没有暴露给扩展, 完全无法监听。
+ * 没有公开 API 可改。其中压缩可被扩展感知(session_before_compact), 此时用 footer 给出中文;
+ * 「重试」「分支摘要」连事件都没有暴露给扩展, 完全无法监听。
  */
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
@@ -24,7 +24,7 @@ export type Phase = "working" | "request" | "respond" | "execute" | "compact";
 
 export type Lang = "zh" | "en";
 
-/** 每个阶段的中英文案。`label` 用于 Working 一栏, `status` 用于 footer。 */
+/** 每个阶段的中英文案。`label` 用于工作指示器, `status` 仅压缩阶段用于 footer。 */
 export const MESSAGES: Record<Lang, Record<Phase, { label: string; status: string }>> = {
 	zh: {
 		working: { label: "工作中…", status: "工作中" },
@@ -75,7 +75,6 @@ export default function piWorking(pi: ExtensionAPI): void {
 		const c = ctx ?? lastCtx;
 		if (!c) return;
 		c.ui.setWorkingMessage(table[p].label);
-		c.ui.setStatus(STATUS_KEY, table[p].status);
 	};
 
 	const enter = (p: Phase, ctx?: ExtensionContext) => {
@@ -83,14 +82,17 @@ export default function piWorking(pi: ExtensionAPI): void {
 		phase = p;
 		awaitingFirstToken = p === "request";
 		apply(p, ctx);
+		// 常规阶段**不**写 footer: 工作指示器已显示同样文案, 再写 footer 会让屏幕最下方
+		// 多出一行重复文本。footer 只在压缩阶段作为兼底(见 setCompactStatus)。
+		(ctx ?? lastCtx)?.ui.setStatus(STATUS_KEY, undefined);
 	};
 
 	const setCompactStatus = (reason: "manual" | "threshold" | "overflow", ctx?: ExtensionContext) => {
 		if (ctx) lastCtx = ctx;
 		phase = "compact";
-		// 无法改 pi 自己的压缩指示器, 至少让 Working 栏与 footer 为中文。
-		(lastCtx ?? ctx)?.ui.setWorkingMessage(table.compact.label);
-		(lastCtx ?? ctx)?.ui.setStatus(STATUS_KEY, COMPACT_REASON[lang][reason]);
+		// 压缩时 pi 自己的 CompactionStatusIndicator 是硬编码英文且 kind 不为 "working",
+		// setWorkingMessage 也影响不到它; footer 是唯一能显示中文的地方, 故此处保留。
+		(ctx ?? lastCtx)?.ui.setStatus(STATUS_KEY, COMPACT_REASON[lang][reason]);
 	};
 
 	const clear = (ctx?: ExtensionContext) => {
@@ -148,10 +150,16 @@ export default function piWorking(pi: ExtensionAPI): void {
 	});
 	pi.on("session_compact", async (_event, ctx) => {
 		// 压缩成功; 若随后会重试本轮, 下一次 before_provider_request 会接管为「请求中」。
-		if (phase === "compact") apply("working", ctx);
+		if (phase === "compact") {
+			phase = "working";
+			(ctx ?? lastCtx)?.ui.setStatus(STATUS_KEY, undefined);
+		}
 	});
 	pi.on("session_compact_failed", async (_event, ctx) => {
-		if (phase === "compact") apply("working", ctx);
+		if (phase === "compact") {
+			phase = "working";
+			(ctx ?? lastCtx)?.ui.setStatus(STATUS_KEY, undefined);
+		}
 	});
 
 	pi.on("agent_settled", async (_event, ctx) => {
@@ -180,7 +188,11 @@ export default function piWorking(pi: ExtensionAPI): void {
 				ctx.ui.notify("用法: /working [working|request|respond|execute|compact|clear]", "error");
 				return;
 			}
-			enter(wanted as Phase, ctx);
+			if (wanted === "compact") {
+				setCompactStatus("manual", ctx);
+			} else {
+				enter(wanted as Phase, ctx);
+			}
 			ctx.ui.notify(`pi-working: 预览 ${table[wanted as Phase].label}`, "info");
 		},
 	});
