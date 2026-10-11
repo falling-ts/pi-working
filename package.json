@@ -1,0 +1,40 @@
+{
+  "name": "pi-working",
+  "version": "1.0.0",
+  "description": "把 pi 运行时的状态指示器翻译为中文(可切英文), 并细分出请求中/响应中/执行中三个阶段。",
+  "type": "module",
+  "license": "MIT",
+  "author": "falling-ts <zgh.yuanshang@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falling-ts/pi-working.git"
+  },
+  "homepage": "https://github.com/falling-ts/pi-working#readme",
+  "bugs": {
+    "url": "https://github.com/falling-ts/pi-working/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "pi-coding-agent",
+    "chinese",
+    "i18n",
+    "status",
+    "working"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": ["./extension.ts"]
+  },
+  "files": [
+    "extension.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}
