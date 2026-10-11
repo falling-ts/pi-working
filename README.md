@@ -32,7 +32,7 @@ agent_settled               → 清除
 ### 从 npm
 
 ```bash
-pi install npm:pi-working
+pi install npm:@falling-ts/pi-working
 ```
 
 ### 从 git
@@ -52,8 +52,10 @@ New-Item -ItemType SymbolicLink `
 单次试用（不写入配置）：
 
 ```bash
-pi -e npm:pi-working
+pi -e npm:@falling-ts/pi-working
 ```
+
+卸载：`pi remove npm:@falling-ts/pi-working`（或对应的 git 源）。
 
 ## 语言切换
 
@@ -103,6 +105,13 @@ pi 的部分状态文案**硬编码**在 TUI 组件里，扩展没有对应 API 
 - `package.json` 用 `pi.extensions` 显式声明入口；
 - 宿主包 `@earendil-works/pi-coding-agent` 只出现在 `peerDependencies`（`"*"`），**不得**放进 `dependencies`；
 - `keywords` 含 `pi-package`，满足 [Pi 包画廊](https://pi.dev/packages) 收录条件。
+
+发布为 **scoped 包** `@falling-ts/pi-working`，公开包需带 `publishConfig.access: "public"`。
+发布命令（本机默认 registry 是淘宝镜像，必须显式指定 npmjs）：
+
+```bash
+npm publish --registry=https://registry.npmjs.org/
+```
 
 ## License
 
