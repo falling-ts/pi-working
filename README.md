@@ -45,7 +45,7 @@ pi install git:github.com/falling-ts/pi-working
 ```powershell
 New-Item -ItemType SymbolicLink `
   -Path "$env:USERPROFILE\.pi\agent\extensions\pi-working" `
-  -Target "D:\AI\pi-space\pi-working"
+  -Target "D:\AI\pi-s\pi-working"
 ```
 
 单次试用（不写入配置）：
