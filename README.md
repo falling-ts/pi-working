@@ -106,7 +106,7 @@ pi 的部分状态文案**硬编码**在 TUI 组件里，扩展没有对应 API 
 ## pi 包规范
 
 - `package.json` 用 `pi.extensions` 显式声明入口；
-- 宿主包 `@earendil-works/pi-coding-agent` 只出现在 `peerDependencies`（`">=1.3.0"`，即不低于上游最新发布），**不得**放进 `dependencies`；
+- 宿主包 `@earendil-works/pi-coding-agent` 只出现在 `peerDependencies`（`">=1.4.0"`，即不低于上游最新发布），**不得**放进 `dependencies`；
 - `keywords` 含 `pi-package`，满足 [Pi 包画廊](https://pi.dev/packages) 收录条件。
 
 发布为 **scoped 包** `@falling-ts/pi-working`，公开包需带 `publishConfig.access: "public"`。
